@@ -1,0 +1,110 @@
+---
+title: ""
+author: "Enrico Crema & Andrew Bevan"
+date:  "`r format(Sys.time(), '%d %B, %Y')`" 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("./src/utility.R")
+```
+
+# Nucleation/Dispersal Bias
+
+Consider two hypothethical archaeological periods, $\alpha$ and $\beta$, with equal durations in time. Our objective is to investigate the percentage change in the number of residential units across the two periods. More formally we are intested in estimating $100 \times (N_\beta - N_\alpha)/N_\beta$ where $N_\alpha$ and $N_\beta$ are the total number of residential units for each period. Our residential units are however spatially orgaised into sites (i.e. settlements) with different sizes, and that our sampling is conditioned by such structure. More specifically, we assume that sampling occurs at the level of site and not each individual residential unit, and that we are able to recover only a fraction $r$ of sites, where $r=k/K$, where $k$ is observed number of sites across the two periods in our sample and $K$ is the number of sites across the two periods in the population. Finally, we assume that the probability of each site being sampled is defined by the following equation:
+
+$$\pi_i = \frac{S_i^b}{\sum_{j=1}^{K}S_j^b}  $$
+
+where $\pi_i$ is the probability of selecting a site with size $S_i$, $K$ is the total number of sites, and $0\leq b \leq 1$. The exponent $b$ is bias parameter that conditions the probability of a site to be sampled as a function of its size. When $b=0$, all sites have the same chance of being included in the sample, but when $b>0$ larger sites have a higher probability of being selected. 
+
+The figure below shows the impact of different values of $b$ with a hypothethical dataset with $K=6$ and site sizes $S_1=200$, $S_2=100$, $S_3=50$, $S_4=20$, $S_5=20$, and $S_6=10$.
+
+```{r}
+par(mar=c(5,4,3,4))
+S=c(200,100,50,20,20,10)
+b=c(0,0.2,0.5)
+barplot(S,names.arg=c(1:6),col="grey",width=1,space=0.2,border=NA,xlab="Sites")
+mtext(side=2,line=3,"S",las=2)
+par(new=T)
+plot(x=seq(from=0.5/7,by=1.2/7,length.out = 6),y=S^b[1]/sum(S^b[1]),type='b',pch=20,col='orange',axes=F,xlab="",ylab="",xlim=c(0,1),ylim=c(0,0.4))
+lines(x=seq(from=0.5/7,by=1.2/7,length.out = 6),y=S^b[2]/sum(S^b[2]),type='b',pch=20,col='red')
+lines(x=seq(from=0.5/7,by=1.2/7,length.out = 6),y=S^b[3]/sum(S^b[3]),type='b',pch=20,col='darkred')
+legend("topright",legend=c("b=0","b=0.2","b=0.5"),pch=20,lwd=1,col=c('orange','red','red'),bty='n')
+axis(side=4,at=c(0,0.1,0.2,0.3,0.4))
+mtext(side=4,line=3,expression(pi),las=2)
+```
+
+## Simulation Experiment
+
+What is the combined impact of the non-random sampling regime described above when the two periods $\alpha$ and $\beta$ are characterised by a _different_ settlement size distribution which we might expect in case of nucleation/dispersal shifts? Here we employ a simple tactical simulation where we: 1) generate artificial settlements for two hypothethical archaeological periods; 2) sample a fraction $r$ of settlements using different degrees of site-size bias $b$; and 3) compute the observed percentage change in the number of residential units. For period $\alpha$ the site size distribution would be approximately log-normal with $\mu=3$ and $\sigma=1$ whilst for period $\beta$ the size distribution would be approximately uniform. The function `sim.settlement()` will generate the artificial settlements ensuring that the total number of residential units for the two periods are the same.
+
+```{r,echo=FALSE}
+sim.settlement = function(K1=300,K2=300,mu=3,sigma=1,attempts=20000,rr=5)
+{
+  t1=round(rlnorm(K1,mu,sigma))
+  t2=0
+  x=0
+  while((sum(t2)!=sum(t1))&(x<=attempts))
+  {
+    t2=round(runif(K2,min=sum(t1)/K1-rr,max=sum(t1)/K1+rr))
+    x=x+1
+  }
+  PeriodsOut=c(rep("t1",length(t1)),rep("t2",length(t2)))
+  return(list(t1=t1,t2=t2,t1t2=c(t1,t2),Periods=PeriodsOut))
+}
+
+
+biasedsampling<-function(x,r=0.2,b=0)
+{
+
+  index=sample(length(x$t1t2),size=c(length(x$t1t2)*r),replace=FALSE,prob=x$t1t2^b)
+  
+  t2=x$t1t2[index][which(x$Periods[index]=="t2")]
+  t1=x$t1t2[index][which(x$Periods[index]=="t1")]
+  
+  pr=100*(sum(t2)-sum(t1))/sum(t1)
+  return(pr)
+}
+
+```
+
+For example:
+
+```{r,fig.width=7,fig.height=4}
+set.seed(224)
+result=sim.settlement(K1=300,K2=300,mu=3,sigma=1)
+par(mfrow=c(1,2))
+hist(result$t1,xlab="Settlement Size",main=expression(paste("period ", alpha)),col='lightblue')
+hist(result$t2,xlab="Settlement Size",main=expression(paste("period ", beta)),col='lightblue')
+
+# Total number of residential units for each period
+sum(result$t1)
+sum(result$t2)
+```
+
+To consider different scenarios we consider sampling fractions $r=\{0.1,0.3,0.7\}$ and sampling biases $b=\{0,0.3,0.7\}$. In all case we consider $K1=K2=1000$ and run 1,000 repetitions for each of the nine parameter combinations. 
+
+```{r}
+set.seed(123)
+simdata = sim.settlement(K1=1000,K2=1000)
+nsim = 100
+b = c(0,0.3,0.7)
+r = c(0.1,0.3,0.7)
+params=expand.grid(r=r,b=b,nsim=1:nsim)
+params$pr=NA
+
+for (i in 1:nrow(params))
+{
+  params$pr[i]=biasedsampling(simdata,r=params$r[i],b=params$b[i])
+}
+
+# Plot results
+params$r=as.factor(params$r)
+p <- ggboxplot(params, x = "b", y = "pr",
+           color = "r", palette = "jco",
+           add = "jitter",ggtheme=theme_grey(),alpha=0.9) + ylab("Percentage Change") + geom_hline(yintercept = 0, linetype="dashed") +theme(legend.position = 'top')
+p
+```
+
+
