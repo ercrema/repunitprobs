@@ -1,6 +1,7 @@
 #Figure Log
+source("../src/utility.R")
 
-set.seed(123)
+set.seed(133)
 simdata = sim.settlement(K1=1000,K2=1000)
 nsim = 100
 b = c(0,0.3,0.7)
@@ -19,3 +20,6 @@ p <- ggboxplot(params, x = "b", y = "pr",
                color = "r", palette = "jco",
                add = "jitter",ggtheme=theme_grey(),alpha=0.9) + ylab("Percentage Change") + geom_hline(yintercept = 0, linetype="dashed") +theme(legend.position = 'top')
 
+pdf(file = "./figure1.pdf",width = 6,height = 5)
+p
+dev.off()
