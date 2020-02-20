@@ -2,17 +2,19 @@
 
 
 #### Computes 95% Confidence Interval of the rate of change between two periods
-marginSites<-function(t1,t2)
+marginSites<-function(n1,n2)
 {
-  p=t2/(t1+t2) #observed proportion
-  n=t1+t2 #sample size
+  p=n2/(n1+n2) #observed proportion
+  n=n1+n2 #sample size
   se=sqrt(p*(1-p)/n) #standard error
   ci=1.96*se #95% confidence interval
   rate = p/(1-p) #observed rate of change
   lo = (p-ci)/(1-(p-ci))
   hi = (p+ci)/(1-(p+ci))
-  return(list(obsRate=rate,ci=c(lo,hi)))
+  return(list(changeRate=(rate-1)*100,ci=100*(c(lo,hi)-1)))
 }
+
+
 
 #### Computes 95% Confidence Interval of the rate of change between two periods via Boootstrap
 marginHouses<-function(t1,t2,nsim=1000)
