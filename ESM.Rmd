@@ -10,6 +10,176 @@ knitr::opts_chunk$set(echo = TRUE)
 source("./src/utility.R")
 ```
 
+# Periodisation and Uncertainty
+
+
+```{r}
+library(trapezoid)
+par(mfrow=c(1,3))
+cx=2
+# panel a
+plot(0,0,xlim=c(800,300),ylim=c(0,10),type='n',xlab="BC",ylab="",axes=F,main="Phase Assignment Uncertainty",cex.main=cx)
+axis(1,at=seq(800,300,-100))
+rect(xleft = 800,xright=600,ybottom=7.5,ytop=9.5,col='darkgrey',border=NA) 
+text(x=700,y=10,labels="Phase A",cex=cx)
+rect(xleft = 660,xright=420,ybottom=4,ytop=6,border=NA,col='darkgrey') 
+text(x=540,y=6.5,labels="Phase B",cex=cx)
+rect(xleft = 420,xright=310,ybottom=0.5,ytop=2.5,border=NA,col='darkgrey') 
+text(x=365,y=3,labels="Phase C",cex=cx)
+
+legend("bottomleft",legend=c(expression(paste(P[x],"(Phase A)=0.05)")),expression(paste(P[x],"(Phase B)=0.8)")),expression(paste(P[x],"(Phase C)=0.15)"))),bty='n',cex=cx)
+
+
+
+# panel b
+rr = seq(660,420,-1)
+plot(0,0,xlim=c(800,300),ylim=c(0,8),type='n',xlab="BC",ylab="",axes=F,main="Within-phase uncertainty",cex.main=cx)
+scl = 5/max(dtrapezoid(-rr,-660,-550,-440,-420))
+axis(1,at=seq(800,300,-100))
+
+## first section
+m = 1+dtrapezoid(-630,-660,-550,-440,-420)*scl
+polygon(x=c(660,630,630,660),y=c(1,m,1,1),col='darkgrey',border=NA)
+sum(dtrapezoid(-seq(660,630,-1),-660,-550,-440,-420))
+text(x=700,y=5,labels=expression(paste(P[x],"(660-630)=0.02")),cex=cx)
+
+
+## second section
+m1 = 1+dtrapezoid(-600,-660,-550,-440,-420)*scl
+m2 = 1+dtrapezoid(-540,-660,-550,-440,-420)*scl
+polygon(x=c(600,550,540,540,600),y=c(m1,6,m2,1,1),col='darkgrey',border=NA)
+sum(dtrapezoid(-seq(600,540,-1),-660,-550,-440,-420))
+text(x=680,y=7,labels=expression(paste(P[x],"(600-540)=0.28")),cex=cx)
+
+
+## third section
+polygon(x=c(500,447,447,500),y=c(6,6,1,1),col='darkgrey',border=NA)
+sum(dtrapezoid(-seq(500,447,-1),-660,-550,-440,-420))
+text(x=400,y=7,labels=expression(paste(P[x],"(500-447)=0.31")),cex=cx)
+
+lines(x=c(665,639),y=c(4.5,1.6))
+lines(x=c(595,571),y=c(6.5,4.5))
+lines(x=c(425,470),y=c(6.5,5.4))
+polygon(x=c(660,550,440,420,660),y=c(1,6,6,1,1),col='NA')
+
+
+# panel c
+
+
+plot(0,0,xlim=c(800,300),ylim=c(0,8),type='n',xlab="BC",ylab="",axes=F,main="Phase boundary uncertainty",cex.main=cx)
+axis(1,at=seq(800,300,-100))
+polygon(x=c(680,550,430,390,680),y=c(1,6,6,1,1),border=rgb(0,0,0,0.5))
+polygon(x=c(640,540,420,400,680),y=c(1,6,6,1,1),border=rgb(0,0,0,0.5))
+polygon(x=c(670,555,470,396,680),y=c(1,6,6,1,1),border=rgb(0,0,0,0.5))
+polygon(x=c(682,556,425,380,680),y=c(1,6,6,1,1),border=rgb(0,0,0,0.5))
+polygon(x=c(650,556,423,330,680),y=c(1,6,6,1,1),border=rgb(0,0,0,0.5))
+points(c(680,640,670,682,650),y=c(1,1,1,1,1),pch=20)
+points(c(550,540,555,556,556),y=c(6,6,6,6,6),pch=20)
+points(c(430,420,470,425,434),y=c(6,6,6,6,6),pch=20)
+points(c(390,400,396,380,330),y=c(1,1,1,1,1),pch=20)
+
+arrows(x0=680,x1=640,y=0.5,y1=0.5,length=0.02,angle=90,code=3)
+text(660,0.1,labels="a",cex=cx)
+
+arrows(x0=556,x1=540,y=6.5,y1=6.5,length=0.02,angle=90,code=3)
+text(548,7,labels="b",cex=cx)
+
+arrows(x0=470,x1=420,y=6.5,y1=6.5,length=0.02,angle=90,code=3)
+text(445,7,labels="c",cex=cx)
+
+arrows(x0=400,x1=330,y=0.5,y1=0.5,length=0.02,angle=90,code=3)
+text(365,0.1,labels="d",cex=cx)
+
+
+```
+
+## Modifiable Temporal Unit Problem
+
+
+```{r}
+
+mc2=function(n=200,p,years,nsim=1000,bw=20,breaks,bb=100)
+{
+ tmp=sample(years,size=n,prob=p/sum(p),replace=T)
+ tmp2 = cut(tmp,breaks=breaks,labels=letters[1:(length(breaks)-1)])
+ tmp3 = rev(table(tmp2))
+ bbSEQ = seq(max(breaks),min(breaks),by=-bb)
+ res = matrix(NA,nrow=length(bbSEQ)-1,ncol=nsim)
+
+for (s in 1:nsim) 
+{
+	tmp4 = numeric()
+	for (b in 1:(length(breaks)-1))
+	{
+		tmp4 = c(tmp4,runif(tmp3[b],min=breaks[b+1],max(breaks[b])))
+	}
+	        tmp5 = cut(tmp4,breaks=bbSEQ,labels=1:(length(bbSEQ)-1))        
+		res[,s]=(rev(table(tmp5)))
+}
+
+return(res)
+}
+
+rescale=function(x,M,m)
+{
+return(((M-m)/(max(x)-min(x)))*(x-max(x))+M)
+}
+
+## Simulate True Population
+age = seq(300,800,1)
+asymptote = 0.9
+sl = .04
+midpoint = 550
+p = 0.1+asymptote / (1 + exp((midpoint - age) * sl))
+d=data.frame(yr=rev(age),p=p)
+
+par(mfrow=c(3,2))
+plot(d$yr,d$p,xlim=c(800,300),type='l',col='darkgrey',ylim=c(0,1),xlab="BC",axes=FALSE,ylab="Population Size")
+axis(1,at=seq(800,300,-100))
+legend("bottomright",legend=c("a"),bty='n',cex=2)
+
+LL = list(c(800,550,300),c(800,700,300),c(800,400,300),c(800,700,400,300),c(800,700,600,500,400,300))
+bb=50
+bbseq=seq(800-bb/2,300+bb/2,-bb)
+for (x in 1:length(LL))
+{
+breaks=LL[[x]]
+tmp2=mc2(n=1000,p=d$p,years=d$yr,bb=50,breaks=breaks)
+
+plot(0,0, xlim=c(800,300),type='n',ylim=c(0,max(tmp2)*1.2),axes=FALSE,ylab="",xlab="BC")
+axis(side=1,at=seq(800,300,-100))
+
+for (b in 1:(length(breaks)))
+{
+col='lightgrey'
+if (as.logical(b%%2)){col='darkgrey'}
+rect(xleft=breaks[b],xright=breaks[b+1],ybottom=max(tmp2)*1,ytop=max(tmp2)*1.1,border=NA,col=col)
+text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=max(tmp2)*1.05,labels=as.roman(b))
+}
+
+lines(bbseq,apply(tmp2,1,mean),type='b',pch=20)
+apply(tmp2[,1:100],2,lines,x=bbseq,col=rgb(0,0,0,0.05))
+axis(2)
+
+legend("bottomright",legend=letters[x+1],bty='n',cex=2)
+
+}
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
 # Nucleation/Dispersal Bias
 
 Consider two hypothethical archaeological periods, $\alpha$ and $\beta$, with equal durations in time. Our objective is to investigate the percentage change in the number of residential units across the two periods. More formally we are intested in estimating $100 \times (N_\beta - N_\alpha)/N_\beta$ where $N_\alpha$ and $N_\beta$ are the total number of residential units for each period. Our residential units are however spatially orgaised into sites (i.e. settlements) with different sizes, and that our sampling is conditioned by such structure. More specifically, we assume that sampling occurs at the level of site and not each individual residential unit, and that we are able to recover only a fraction $r$ of sites, where $r=k/K$, where $k$ is observed number of sites across the two periods in our sample and $K$ is the number of sites across the two periods in the population. Finally, we assume that the probability of each site being sampled is defined by the following equation:
