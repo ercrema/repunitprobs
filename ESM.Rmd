@@ -10,6 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 source("./src/utility.R")
 ```
 
+
+
+
 # Periodisation and Uncertainty
 ```{r,fig.width=10,fig.height=3}
 library(trapezoid)
@@ -147,6 +150,48 @@ legend("bottomright",legend=letters[x+1],bty='n',cex=2)
 
 # Nucleation/Dispersal Bias
 
+## Example from Prehistoric Eastern Tokyo Bay
+
+```{r,fig.width=7,fig.height=6}
+library(reldist)
+chiba=read.csv("./data/chibaJomon_fromCrema2013.csv")
+chiba = subset(chiba,!is.na(chiba$SimplifiedPhase))
+chiba$SimplifiedPhase=factor(chiba$SimplifiedPhase,levels=c("Otamadai-Katsuzaka","Kasori E (early)","Kasori E (late)","Shomyoji","Horinouchi","Kasori B","Soya","Angyo 1 & 2"))
+x = table(chiba$SiteID,chiba$SimplifiedPhase)
+
+par(mar=c(9,5,5,3))
+plot(0,0,xlab="",ylab="",xlim=c(0,9),axes=FALSE,type='n',ylim=c(0,max(apply(x,2,sum))+20))
+
+gg = numeric(length=8)
+
+for (i in 1:8)
+{
+ tmp=x[,i]
+ tmp=tmp[which(tmp>0)]
+ gg[i]=gini(tmp)
+ tmp=c(0,cumsum(tmp))
+ for (k in 1:c(length(tmp)-1))
+ {
+	 col="lightgrey"
+	 if (names(tmp[k+1])=='10529'){col='orange'} #Ariyoshi-Kita Site
+	 if (names(tmp[k+1])=='9825'){col='royalblue'} #Miyauchiidosaku Site
+	 rect(xleft=i-0.4,xright=i+0.4,ybottom=tmp[k],ytop=tmp[k+1],col=col)
+ }
+	 text(x=i,y=tmp[k+1]+10,labels=paste0("n=",length(tmp)-1))
+}
+
+axis(2)
+axis(3,at=1:8,labels=round(gg,2))
+mtext(side=2,line=3,"Number of Pithouses",cex=1)
+mtext(side=3,line=3,"Gini Coefficient (settlement size)",cex=1)
+mtext(side=1,line=6.5,"Ceramic Phases",cex=1)
+axis(1,at=1:8,labels=levels(chiba$SimplifiedPhase),las=2)
+legend(6.5,220,legend=c("Ariyoshi-Kita","Aioi","Other Sites"),fill=c("orange","royalblue","grey"))
+```
+
+
+
+## Simulation
 Consider two hypothethical archaeological periods, $\alpha$ and $\beta$, with equal durations in time. Our objective is to investigate the percentage change in the number of residential units across the two periods. More formally we are intested in estimating $100 \times (N_\beta - N_\alpha)/N_\beta$ where $N_\alpha$ and $N_\beta$ are the total number of residential units for each period. Our residential units are however spatially orgaised into sites (i.e. settlements) with different sizes, and that our sampling is conditioned by such structure. More specifically, we assume that sampling occurs at the level of site and not each individual residential unit, and that we are able to recover only a fraction $r$ of sites, where $r=k/K$, where $k$ is observed number of sites across the two periods in our sample and $K$ is the number of sites across the two periods in the population. Finally, we assume that the probability of each site being sampled is defined by the following equation:
 
 $$\pi_i = \frac{S_i^b}{\sum_{j=1}^{K}S_j^b}  $$
