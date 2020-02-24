@@ -1,8 +1,9 @@
 ---
-title: ""
+title: "Electronic Supplementary Material for:"
+subtitle: "Comparing time series of long-term human activity: three key challenges"
 author: "Enrico Crema & Andrew Bevan"
 date:  "`r format(Sys.time(), '%d %B, %Y')`" 
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -11,187 +12,146 @@ source("./src/utility.R")
 ```
 
 
+# Simulation 1: Modifiable Temporal Unit Problem
 
+Consider the following logistic population dynamic, where a major population increase occurs between 600 and 500 BC.
 
-# Periodisation and Uncertainty
-```{r,fig.width=10,fig.height=3}
-library(trapezoid)
-par(mfrow=c(1,3))
-cx=1.2
-# panel a
-plot(0,0,xlim=c(800,300),ylim=c(0,10),type='n',xlab="BC",ylab="",axes=F,main="Phase Assignment Uncertainty",cex.main=cx)
-axis(1,at=seq(800,300,-100))
-rect(xleft = 800,xright=600,ybottom=7.5,ytop=9.5,col='darkgrey',border=NA) 
-text(x=700,y=10,labels="Phase A",cex=cx)
-rect(xleft = 660,xright=420,ybottom=4,ytop=6,border=NA,col='darkgrey') 
-text(x=540,y=6.5,labels="Phase B",cex=cx)
-rect(xleft = 420,xright=310,ybottom=0.5,ytop=2.5,border=NA,col='darkgrey') 
-text(x=365,y=3,labels="Phase C",cex=cx)
-
-legend("bottomleft",legend=c(expression(paste(P[x],"(Phase A)=0.05)")),expression(paste(P[x],"(Phase B)=0.8)")),expression(paste(P[x],"(Phase C)=0.15)"))),bty='n',cex=cx)
-
-
-
-# panel b
-rr = seq(660,420,-1)
-plot(0,0,xlim=c(800,300),ylim=c(0,8),type='n',xlab="BC",ylab="",axes=F,main="Within-phase uncertainty",cex.main=cx)
-scl = 5/max(dtrapezoid(-rr,-660,-550,-440,-420))
-axis(1,at=seq(800,300,-100))
-
-## first section
-m = 1+dtrapezoid(-630,-660,-550,-440,-420)*scl
-polygon(x=c(660,630,630,660),y=c(1,m,1,1),col='darkgrey',border=NA)
-sum(dtrapezoid(-seq(660,630,-1),-660,-550,-440,-420))
-text(x=700,y=5,labels=expression(paste(P[x],"(660-630)=0.02")),cex=cx)
-
-
-## second section
-m1 = 1+dtrapezoid(-600,-660,-550,-440,-420)*scl
-m2 = 1+dtrapezoid(-540,-660,-550,-440,-420)*scl
-polygon(x=c(600,550,540,540,600),y=c(m1,6,m2,1,1),col='darkgrey',border=NA)
-sum(dtrapezoid(-seq(600,540,-1),-660,-550,-440,-420))
-text(x=680,y=7,labels=expression(paste(P[x],"(600-540)=0.28")),cex=cx)
-
-
-## third section
-polygon(x=c(500,447,447,500),y=c(6,6,1,1),col='darkgrey',border=NA)
-sum(dtrapezoid(-seq(500,447,-1),-660,-550,-440,-420))
-text(x=400,y=7,labels=expression(paste(P[x],"(500-447)=0.31")),cex=cx)
-
-lines(x=c(665,639),y=c(4.5,1.6))
-lines(x=c(595,571),y=c(6.5,4.5))
-lines(x=c(425,470),y=c(6.5,5.4))
-polygon(x=c(660,550,440,420,660),y=c(1,6,6,1,1),col='NA')
-
-
-# panel c
-
-
-plot(0,0,xlim=c(800,300),ylim=c(0,8),type='n',xlab="BC",ylab="",axes=F,main="Phase boundary uncertainty",cex.main=cx)
-axis(1,at=seq(800,300,-100))
-polygon(x=c(680,550,430,390,680),y=c(1,6,6,1,1),border=rgb(0,0,0,0.5))
-polygon(x=c(640,540,420,400,680),y=c(1,6,6,1,1),border=rgb(0,0,0,0.5))
-polygon(x=c(670,555,470,396,680),y=c(1,6,6,1,1),border=rgb(0,0,0,0.5))
-polygon(x=c(682,556,425,380,680),y=c(1,6,6,1,1),border=rgb(0,0,0,0.5))
-polygon(x=c(650,556,423,330,680),y=c(1,6,6,1,1),border=rgb(0,0,0,0.5))
-points(c(680,640,670,682,650),y=c(1,1,1,1,1),pch=20)
-points(c(550,540,555,556,556),y=c(6,6,6,6,6),pch=20)
-points(c(430,420,470,425,434),y=c(6,6,6,6,6),pch=20)
-points(c(390,400,396,380,330),y=c(1,1,1,1,1),pch=20)
-
-arrows(x0=680,x1=640,y=0.5,y1=0.5,length=0.02,angle=90,code=3)
-text(660,0.1,labels="a",cex=cx)
-
-arrows(x0=556,x1=540,y=6.5,y1=6.5,length=0.02,angle=90,code=3)
-text(548,7,labels="b",cex=cx)
-
-arrows(x0=470,x1=420,y=6.5,y1=6.5,length=0.02,angle=90,code=3)
-text(445,7,labels="c",cex=cx)
-
-arrows(x0=400,x1=330,y=0.5,y1=0.5,length=0.02,angle=90,code=3)
-text(365,0.1,labels="d",cex=cx)
-
-
-```
-
-## Modifiable Temporal Unit Problem
-
-
-```{r,fig.height=8,fig.width=5}
-## Simulate True Population
+```{r,fig.width=5,fig.height=5}
 age = seq(300,800,1)
 asymptote = 0.9
-sl = .04
+sl = 0.04
 midpoint = 550
 p = 0.1+asymptote / (1 + exp((midpoint - age) * sl))
 d=data.frame(yr=rev(age),p=p)
-
-par(mfrow=c(3,2))
-plot(d$yr,d$p,xlim=c(800,300),type='l',col='darkgrey',ylim=c(0,1),xlab="BC",axes=FALSE,ylab="Population Size")
+plot(d$yr,d$p,xlim=c(800,300),type='l',ylim=c(0,1),xlab="BC",ylab="",axes=FALSE)
 axis(1,at=seq(800,300,-100))
-legend("bottomright",legend=c("a"),bty='n',cex=2)
+mtext(side=2,"Population Size",line=1.1)
+box()
+```
 
-LL = list(c(800,550,300),c(800,700,300),c(800,400,300),c(800,700,400,300),c(800,700,600,500,400,300))
-resolution=50
-bbseq=seq(800-resolution/2,300+resolution/2,-resolution)
-for (x in 1:length(LL))
+We first simulate 1,000 arhcaeological events that occured with frequencies directly proportional to such population dynamic. For example:
+
+```{r}
+n=1000
+set.seed(123)
+ss = round(sample(d$yr,size=1000,prob=d$p/sum(d$p),replace=TRUE))
+hist(ss,xlim=c(800,300),breaks=seq(300,800,50),col='darkorange',border='lightgrey',freq=T,main='')
+lines(d$yr,(d$p/(sum(d$p))*n*50),lwd=2,lty=2) #True Population Curve
+```
+
+Although some discrepancy can be observed due to sampling error the observed density of sampled events and the underlying population are identical.
+
+## The Effect of Periodisation
+
+We emulate an archaeological periodisation process by replacing the time-stamp of each event to the membership to an archaeological phase. For example, suppose phase A had a temporal span of 800 to 701, and phase B between 700 and 401, and phase C between 400 and 300.
+
+```{r}
+  phases = cut(ss,breaks=c(800,700,400,300),labels=c("C","B","A"),include.lowest = TRUE)
+#labels are in reverse order since dates are in BC
+  table(phases)
+```
+
+Thus in this case there are `r as.numeric(table(phases)['A'])` events assigned to phase A, `r as.numeric(table(phases)['B'])` to phase B, and `r as.numeric(table(phases)['C'])` to phase C.
+
+### Aoristic Analysis + Monte-Carlo Approach
+
+There is a number of closely related developed in the last decade designed to analyse frequency data based on archaeological periodisation. One such approach consists of assigning probabilistic weights to individual events for a given temporal interval. This approach is at the basis of aoristic analysis, where time is divided into equally sized blocks, and weights are computed under the assumption of a uniform probability distribution within assigned phase(s). Thus if we use blocks of 50 years, we would obtain the following:
+
+```{r,fig.height=5,fig.width=5}
+# Extract number of cases
+An =table(phases)['A']
+Bn =table(phases)['B']
+Cn =table(phases)['C']
+
+# Create a weight matrix
+weights = matrix(NA,nrow=n,ncol=10) #10 blocks of 50 years
+
+# Assign weights
+weights[1:An,] = rep(c(50/100,50/100,0,0,0,0,0,0,0,0),each=An)
+weights[(An+1):(An+Bn),] = rep(c(0,0,50/300,50/300,50/300,50/300,50/300,50/300,0,0),each=Bn)
+weights[(An+Bn+1):(An+Bn+Cn),] = rep(c(0,0,0,0,0,0,0,0,50/100,50/100),each=Cn)
+
+# Compute Aoristic Sum
+asum = apply(weights,2,sum)
+
+# Visualise
+midPoints = seq(775,325,-50)
+plot(midPoints,asum,xlim=c(800,300),type='b',pch=20,xlab="BC",ylab="Aoristic Sum")
+lines(d$yr,(d$p/sum(d$p)*n*50),lwd=2,lty=2,col='darkblue')
+```
+
+Aoristic sums do not provide, however, any measure of chronological uncertainty making hard to discern, for example, whether flat portions of the curve are the result of genuine stability in the frequency of events or the result of higher levels of uncertainty. To overcome this issue, and alternative approach consist of employing Monte-Carlo simulation:
+
+```{r,fig.width=5,fig.height=5}
+nsim =1000 #number of simulations
+mat=matrix(NA,nrow=10,ncol=nsim)
+
+# simulate dates and aggregate by 50 year blocks
+for (s in 1:nsim)
 {
-breaks=LL[[x]]
-tmp2=mcunif(n=1000,p=d$p,years=d$yr,resolution=resolution,breaks=breaks)
-
-plot(0,0, xlim=c(800,300),type='n',ylim=c(0,max(tmp2)*1.2),axes=FALSE,ylab="",xlab="BC")
-axis(side=1,at=seq(800,300,-100))
-
-for (b in 1:(length(breaks)))
-{
-col='lightgrey'
-if (as.logical(b%%2)){col='darkgrey'}
-rect(xleft=breaks[b],xright=breaks[b+1],ybottom=max(tmp2)*1,ytop=max(tmp2)*1.1,border=NA,col=col)
-text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=max(tmp2)*1.05,labels=as.roman(b))
+  simdates = c(round(runif(An,min=701,800)),round(runif(Bn,401,700)),round(runif(Cn,300,400)))
+  cnts = cut(simdates,breaks=seq(300,800,50),include.lowest = T)
+  mat[,s]=as.numeric(rev(table(cnts))) # reverse order as dates are in BC
 }
 
-lines(bbseq,apply(tmp2,1,mean),type='b',pch=20)
-apply(tmp2[,1:100],2,lines,x=bbseq,col=rgb(0,0,0,0.05))
-axis(2)
+#make spaghetti plot with 100 random simulations
+avg = apply(mat,1,mean)
+plot(0,0,type='n',xlab='BC',ylab='Number of Events',xlim=c(800,300),ylim=range(mat))
+apply(mat[,sample(1:1000,size=100)],2,lines,x=midPoints,col=rgb(0,0,0,0.05)) #
+lines(midPoints,avg,type='b',pch=20)
+lines(d$yr,(d$p/sum(d$p)*n*50),lwd=2,lty=2,col='darkblue')
+```
 
-legend("bottomright",legend=letters[x+1],bty='n',cex=2)
+The average time-series extracted from the Monte-Carlo simulations is comparable to the result of the aoristic analysis, but showcases the extent of chronological uncertainty between 700 and 400 BC (i.e. phase B). More importantly, because of the assumption of uniform probability distribution, both methods fail to identify correctly  the major population growth event between 600 and 500 BC. The extent of this bias depends on the resolution of the archaeological periodisation in relation to the scale of the population dynamic of interest and the extent by which shifts in frequencies co-occur with changes in archaeological phases. 
 
+The script below utilises the function `mcsim()` (which automatise the workflow described above) to generate different time-series with the Monte-Carlo method under different numnbers and position of archaeological phases When the transition between archaeological periods are alligned with major shifts in the frequency of evens (e.g. panels _a_ and _c_), or when the resolution of the phases are sufficiently fine-grained (e.g. panel _f_) the time-series obtained with the Monte-Carlo method recovers much of the features of the true population dynamics (shown in dashed red line). However when the resolution is coarse or when the shift from one archaeological period to another is not associated with changes in  population density (e.g. panels _b_, _d_ and _e_) the time-series will be biased in identifying the correct timing and magnitude of specific population dynamic:
+
+
+```{r,fig.height=8,fig.width=5.5}
+resolution=50 #define time-block resolution
+# Extract min-max from theorethical model
+m=min((d$p/sum(d$p)*n*resolution))
+M=max((d$p/sum(d$p)*n*resolution))
+
+
+#Consider different periodisations:
+LL = list(c(800,550,300),
+          c(800,700,300),
+          c(800,600,500,300),
+          c(800,400,300),
+          c(800,700,400,300),
+          c(800,700,600,500,400,300))
+
+par(mfrow=c(3,2),mar=c(5,5,1,1))
+for (i in 1:length(LL))
+{
+  breaks=LL[[i]]
+  tmp=mcsim(x=ss,nsim=1000,breaks=breaks,resolution=50)
+  avg = apply(tmp,1,mean)
+  plot(0,0,type='n',xlab='BC',ylab='Number of Events',xlim=c(800,300),ylim=c(0,250),axes=FALSE)
+  axis(1)
+  axis(2)
+  apply(tmp[,sample(1:1000,size=100)],2,lines,x=midPoints,col=rgb(0,0,0,0.05)) #
+  lines(midPoints,avg,type='b',pch=20)
+  lines(d$yr,(d$p/sum(d$p)*n*50),lwd=2,lty=2,col='darkred')
+  legend("bottomright",legend=letters[i],bty='n',cex=2)
+  
+   for (b in 1:(length(breaks)))
+  {
+    col='lightgrey'
+    if (as.logical(b%%2)){col='darkgrey'}
+    rect(xleft=breaks[b],xright=breaks[b+1],ybottom=210,ytop=250,border=NA,col=col)
+    text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=230,labels=as.roman(b))
+  }
+  
 }
 ```
 
 
 
+# Simulation 2: Nucleation/Dispersal Bias
 
-
-
-
-
-
-
-# Nucleation/Dispersal Bias
-
-## Example from Prehistoric Eastern Tokyo Bay
-
-```{r,fig.width=7,fig.height=6}
-library(reldist)
-chiba=read.csv("./data/chibaJomon_fromCrema2013.csv")
-chiba = subset(chiba,!is.na(chiba$SimplifiedPhase))
-chiba$SimplifiedPhase=factor(chiba$SimplifiedPhase,levels=c("Otamadai-Katsuzaka","Kasori E (early)","Kasori E (late)","Shomyoji","Horinouchi","Kasori B","Soya","Angyo 1 & 2"))
-x = table(chiba$SiteID,chiba$SimplifiedPhase)
-
-par(mar=c(9,5,5,3))
-plot(0,0,xlab="",ylab="",xlim=c(0,9),axes=FALSE,type='n',ylim=c(0,max(apply(x,2,sum))+20))
-
-gg = numeric(length=8)
-
-for (i in 1:8)
-{
- tmp=x[,i]
- tmp=tmp[which(tmp>0)]
- gg[i]=gini(tmp)
- tmp=c(0,cumsum(tmp))
- for (k in 1:c(length(tmp)-1))
- {
-	 col="lightgrey"
-	 if (names(tmp[k+1])=='10529'){col='orange'} #Ariyoshi-Kita Site
-	 if (names(tmp[k+1])=='9825'){col='royalblue'} #Miyauchiidosaku Site
-	 rect(xleft=i-0.4,xright=i+0.4,ybottom=tmp[k],ytop=tmp[k+1],col=col)
- }
-	 text(x=i,y=tmp[k+1]+10,labels=paste0("n=",length(tmp)-1))
-}
-
-axis(2)
-axis(3,at=1:8,labels=round(gg,2))
-mtext(side=2,line=3,"Number of Pithouses",cex=1)
-mtext(side=3,line=3,"Gini Coefficient (settlement size)",cex=1)
-mtext(side=1,line=6.5,"Ceramic Phases",cex=1)
-axis(1,at=1:8,labels=levels(chiba$SimplifiedPhase),las=2)
-legend(6.5,220,legend=c("Ariyoshi-Kita","Aioi","Other Sites"),fill=c("orange","royalblue","grey"))
-```
-
-
-
-## Simulation
+## Setup
 Consider two hypothethical archaeological periods, $\alpha$ and $\beta$, with equal durations in time. Our objective is to investigate the percentage change in the number of residential units across the two periods. More formally we are intested in estimating $100 \times (N_\beta - N_\alpha)/N_\beta$ where $N_\alpha$ and $N_\beta$ are the total number of residential units for each period. Our residential units are however spatially orgaised into sites (i.e. settlements) with different sizes, and that our sampling is conditioned by such structure. More specifically, we assume that sampling occurs at the level of site and not each individual residential unit, and that we are able to recover only a fraction $r$ of sites, where $r=k/K$, where $k$ is observed number of sites across the two periods in our sample and $K$ is the number of sites across the two periods in the population. Finally, we assume that the probability of each site being sampled is defined by the following equation:
 
 $$\pi_i = \frac{S_i^b}{\sum_{j=1}^{K}S_j^b}  $$
@@ -207,10 +167,15 @@ b=c(0,0.2,0.5)
 barplot(S,names.arg=c(1:6),col="grey",width=1,space=0.2,border=NA,xlab="Sites")
 mtext(side=2,line=3,"S",las=2)
 par(new=T)
-plot(x=seq(from=0.5/7,by=1.2/7,length.out = 6),y=S^b[1]/sum(S^b[1]),type='b',pch=20,col='orange',axes=F,xlab="",ylab="",xlim=c(0,1),ylim=c(0,0.4))
-lines(x=seq(from=0.5/7,by=1.2/7,length.out = 6),y=S^b[2]/sum(S^b[2]),type='b',pch=20,col='red')
-lines(x=seq(from=0.5/7,by=1.2/7,length.out = 6),y=S^b[3]/sum(S^b[3]),type='b',pch=20,col='darkred')
-legend("topright",legend=c("b=0","b=0.2","b=0.5"),pch=20,lwd=1,col=c('orange','red','red'),bty='n')
+plot(x=seq(from=0.5/7,by=1.2/7,length.out =6),
+     y=S^b[1]/sum(S^b[1]),type='b',pch=20,col='orange',
+     axes=F,xlab="",ylab="",xlim=c(0,1),ylim=c(0,0.4))
+lines(x=seq(from=0.5/7,by=1.2/7,length.out = 6),
+      y=S^b[2]/sum(S^b[2]),type='b',pch=20,col='red')
+lines(x=seq(from=0.5/7,by=1.2/7,length.out = 6),
+      y=S^b[3]/sum(S^b[3]),type='b',pch=20,col='darkred')
+legend("topright",legend=c("b=0","b=0.2","b=0.5"),
+       pch=20,lwd=1,col=c('orange','red','red'),bty='n')
 axis(side=4,at=c(0,0.1,0.2,0.3,0.4))
 mtext(side=4,line=3,expression(pi),las=2)
 ```
@@ -256,7 +221,10 @@ for (i in 1:nrow(params))
 params$r=as.factor(params$r)
 p <- ggboxplot(params, x = "b", y = "pr",
            color = "r", palette = "jco",
-           add = "jitter",ggtheme=theme_grey(),alpha=0.9) + ylab("Percentage Change") + geom_hline(yintercept = 0, linetype="dashed") +theme(legend.position = 'top')
+           add = "jitter",ggtheme=theme_grey(),alpha=0.9) + 
+  ylab("Percentage Change") + 
+  geom_hline(yintercept = 0, linetype="dashed") + 
+  theme(legend.position = 'top')
 p
 ```
 
