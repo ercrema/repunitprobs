@@ -128,38 +128,43 @@ midpoint = 550
 p = 0.1+asymptote / (1 + exp((midpoint - age) * sl))
 d=data.frame(yr=rev(age),p=p)
 
-par(mfrow=c(3,2))
-plot(d$yr,d$p,xlim=c(800,300),type='l',col='darkgrey',ylim=c(0,1),xlab="BC",axes=FALSE,ylab="Population Size")
-axis(1,at=seq(800,300,-100))
-legend("bottomright",legend=c("a"),bty='n',cex=2)
+resolution=50 #define time-block resolution
+# Extract min-max from theorethical model
+m=min((d$p/sum(d$p)*n*resolution))
+M=max((d$p/sum(d$p)*n*resolution))
 
-LL = list(c(800,550,300),c(800,700,300),c(800,400,300),c(800,700,400,300),c(800,700,600,500,400,300))
-resolution=50
-bbseq=seq(800-resolution/2,300+resolution/2,-resolution)
-for (x in 1:length(LL))
+
+#Consider different periodisations:
+LL = list(c(800,550,300),
+          c(800,700,300),
+          c(800,600,500,300),
+          c(800,400,300),
+          c(800,700,400,300),
+          c(800,700,600,500,400,300))
+
+par(mfrow=c(3,2),mar=c(5,5,1,1))
+for (i in 1:length(LL))
 {
-  breaks=LL[[x]]
-  tmp2=mcunif(n=1000,p=d$p,years=d$yr,resolution=resolution,breaks=breaks)
-  
-  plot(0,0, xlim=c(800,300),type='n',ylim=c(0,max(tmp2)*1.2),axes=FALSE,ylab="",xlab="BC")
-  axis(side=1,at=seq(800,300,-100))
+  breaks=LL[[i]]
+  tmp=mcsim(x=ss,nsim=1000,breaks=breaks,resolution=50)
+  avg = apply(tmp,1,mean)
+  plot(0,0,type='n',xlab='BC',ylab='Number of Events',xlim=c(800,300),ylim=c(0,250),axes=FALSE)
+  axis(1)
+  axis(2)
+  apply(tmp[,sample(1:1000,size=100)],2,lines,x=midPoints,col=rgb(0,0,0,0.05)) #
+  lines(midPoints,avg,type='b',pch=20)
+  lines(d$yr,(d$p/sum(d$p)*n*50),lwd=2,lty=2,col='darkred')
+  legend("bottomright",legend=letters[i],bty='n',cex=2)
   
   for (b in 1:(length(breaks)))
   {
     col='lightgrey'
     if (as.logical(b%%2)){col='darkgrey'}
-    rect(xleft=breaks[b],xright=breaks[b+1],ybottom=max(tmp2)*1,ytop=max(tmp2)*1.1,border=NA,col=col)
-    text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=max(tmp2)*1.05,labels=as.roman(b))
+    rect(xleft=breaks[b],xright=breaks[b+1],ybottom=210,ytop=250,border=NA,col=col)
+    text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=230,labels=as.roman(b))
   }
   
-  lines(bbseq,apply(tmp2,1,mean),type='b',pch=20)
-  apply(tmp2[,1:100],2,lines,x=bbseq,col=rgb(0,0,0,0.05))
-  axis(2)
-  
-  legend("bottomright",legend=letters[x+1],bty='n',cex=2)
-  
 }
-
 dev.off()
 
 
