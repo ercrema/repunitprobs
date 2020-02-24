@@ -119,7 +119,7 @@ dev.off()
 
 ## Figure 4 ####
 
-pdf(file = "./figure4.pdf",width = 5,height = 8)
+pdf(file = "./figure4.pdf",width = 5.5,height = 8)
 
 age = seq(300,800,1)
 asymptote = 0.9
@@ -128,7 +128,13 @@ midpoint = 550
 p = 0.1+asymptote / (1 + exp((midpoint - age) * sl))
 d=data.frame(yr=rev(age),p=p)
 
+n=1000
+set.seed(123)
+ss = round(sample(d$yr,size=1000,prob=d$p/sum(d$p),replace=TRUE))
+
 resolution=50 #define time-block resolution
+midPoints = seq(775,325,-50)
+
 # Extract min-max from theorethical model
 m=min((d$p/sum(d$p)*n*resolution))
 M=max((d$p/sum(d$p)*n*resolution))
