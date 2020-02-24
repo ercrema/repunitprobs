@@ -52,36 +52,32 @@ rescale=function(x,M,m)
 
 
 #'@title Simulating the effect of archaeological periodisation and modifiable temporal unit problem
-#'@param n Number of events to be sampled. Default is 200.
-#'@param years A vector of calendar years
-#'@param p A vector of probabilities matching years.
+#'@param x A vector of events with associated dates
 #'@param nsim Number of Monte-Carlo simulations. Default is 1000.
 #'@param breaks A vector breakpoint between archaeological periods.
-#'@param bb Size of chronological blocks for aggregating simulated events.
-#'@details. The function generates first n samples from the user provided model (parameters p and years), then assigns to each sample a membership to an archaeological phase defined by the parameter breaks. A simulation routine is then initialised. This consist of assigning randomly to each event a new time-stamp within each phase using a uniform probability distribution, and then aggregating dates by equally sized chronological blocks of size resolution. This process is repeated nsim times. 
+#'@param resolution Size of chronological blocks for aggregating simulated events.
 
-
-mcunif=function(n=200,years,p,nsim=1000,breaks,resolution=100)
+mcsim <- function(x,nsim,breaks,resolution)
 {
-  tmp=sample(years,size=n,prob=p/sum(p),replace=T)
-  tmp2 = cut(tmp,breaks=breaks,labels=letters[1:(length(breaks)-1)])
-  tmp3 = rev(table(tmp2))
+  tmp = cut(x,breaks=breaks,labels=letters[1:(length(breaks)-1)])
+  tmp2 = rev(table(tmp))
   bbSEQ = seq(max(breaks),min(breaks),by=-resolution)
   res = matrix(NA,nrow=length(bbSEQ)-1,ncol=nsim)
   
   for (s in 1:nsim) 
   {
-    tmp4 = numeric()
+    tmp3 = numeric()
     for (b in 1:(length(breaks)-1))
     {
-      tmp4 = c(tmp4,runif(tmp3[b],min=breaks[b+1],max(breaks[b])))
+      tmp3 = c(tmp3,runif(tmp2[b],min=breaks[b+1],max(breaks[b])))
     }
-    tmp5 = cut(tmp4,breaks=bbSEQ,labels=1:(length(bbSEQ)-1))        
-    res[,s]=(rev(table(tmp5)))
+    tmp4 = cut(tmp3,breaks=bbSEQ,labels=1:(length(bbSEQ)-1))        
+    res[,s]=(rev(table(tmp4)))
   }
   
   return(res)
 }
+
 
 
 
