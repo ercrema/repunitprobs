@@ -152,22 +152,36 @@ par(mfrow=c(3,2),mar=c(5,5,1,1))
 for (i in 1:length(LL))
 {
   breaks=LL[[i]]
-  tmp=mcsim(x=ss,nsim=1000,breaks=breaks,resolution=50)
-  avg = apply(tmp,1,mean)
-  plot(0,0,type='n',xlab='BC',ylab='Number of Events',xlim=c(800,300),ylim=c(0,250),axes=FALSE)
+  #tmp=mcsim(x=ss,nsim=1000,breaks=breaks,resolution=50)
+  tmp=mcsim(x=ss,nsim=1000,breaks=breaks,kde=TRUE,bw=20)
+  avg = apply(tmp,1,mean,na.rm=TRUE)
+ # plot(0,0,type='n',xlab='BC',ylab='Number of Events',xlim=c(800,300),ylim=c(0,250),axes=FALSE)
+  plot(0,0,type='n',xlab='BC',ylab='Number of Events',xlim=c(800,300),ylim=c(0,0.0045),axes=FALSE)
+  
   axis(1)
   axis(2)
-  apply(tmp[,sample(1:1000,size=100)],2,lines,x=midPoints,col=rgb(0,0,0,0.05)) #
-  lines(midPoints,avg,type='b',pch=20)
-  lines(d$yr,(d$p/sum(d$p)*n*50),lwd=2,lty=2,col='darkred')
+  #apply(tmp[,sample(1:1000,size=100)],2,lines,x=midPoints,col=rgb(0,0,0,0.05)) #
+  
+  tseq=seq(max(breaks),min(breaks),by=-1)
+  tseq=tseq[-length(tseq)]
+  apply(tmp[,sample(1:1000,size=100)],2,lines,x=tseq,col=rgb(0,0,0,0.05)) #
+  
+  #lines(midPoints,avg,type='b',pch=20)
+  lines(tseq,avg,type='l',pch=20)
+  
+ # lines(d$yr,(d$p/sum(d$p)*n*50),lwd=2,lty=2,col='darkred')
+  lines(d$yr,(d$p/sum(d$p)*1),lwd=2,lty=2,col='darkred')
+  
   legend("bottomright",legend=letters[i],bty='n',cex=2)
   
   for (b in 1:(length(breaks)))
   {
     col='lightgrey'
     if (as.logical(b%%2)){col='darkgrey'}
-    rect(xleft=breaks[b],xright=breaks[b+1],ybottom=210,ytop=250,border=NA,col=col)
-    text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=230,labels=as.roman(b))
+   # rect(xleft=breaks[b],xright=breaks[b+1],ybottom=210,ytop=250,border=NA,col=col)
+  #  text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=230,labels=as.roman(b))
+    rect(xleft=breaks[b],xright=breaks[b+1],ybottom=0.004,ytop=0.0045,border=NA,col=col)
+    text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=0.0042,labels=as.roman(b))
   }
   
 }
@@ -175,8 +189,6 @@ dev.off()
 
 
 ## Figure 5 ####
-pdf(file = "./figure5.pdf",width = 5,height = 5)
-
 set.seed(133)
 simdata = sim.settlement(K1=1000,K2=1000)
 nsim = 100
@@ -190,11 +202,49 @@ for (i in 1:nrow(params))
   params$pr[i]=biasedsampling(simdata,r=params$r[i],b=params$b[i])
 }
 
-# Plot results
-params$r=as.factor(params$r)
-p <- ggboxplot(params, x = "b", y = "pr",
-               color = "r", palette = "jco",
-               add = "jitter",ggtheme=theme_grey(),alpha=0.9) + ylab("Percentage Change") + geom_hline(yintercept = 0, linetype="dashed") +theme(legend.position = 'top')
 
-p
+pdf(file = "./figure5.pdf",width = 5,height = 4.5)
+par(mar=c(6,4,3.3,1),bg="white")
+layout(matrix(c(1,1,2,1),2,2),width=c(1,1),height=c(1,1))
+plot(0,0,type='n',xlab=c("b (Sampling Bias)"),ylab="Percentage Change",xlim=c(0.5,3.5),ylim=range(params$pr),axes=FALSE)
+
+colSeq=c("darkblue","darkorange","darkgrey")
+alpha=0.2
+colSeq2=c(rgb(0,0,0.54,alpha),rgb(1,0.55,0,alpha),rgb(0.66,0.66,0.66,alpha))
+mids=c(0.75,1,1.25)
+for (i in 1:length(b))
+{
+  for (j in 1:length(r))
+  {
+    bb=b[i]
+    rr=r[j]
+    y = subset(params,b==bb&r==rr)$pr
+    points(x=i-1+runif(100,mids[j]-0.05,mids[j]+0.05),y=y,pch=20,col=colSeq2[j])
+    rect(ybottom=quantile(y,0.25),ytop=quantile(y,0.75),xleft=i-1+mids[j]-0.07,xright=i-1+mids[j]+0.07,border=colSeq[j])
+    lines(x=c(i-1+mids[j]-0.07,i-1+mids[j]+0.07),y=c(median(y),median(y)),lwd=2,col=colSeq[j])
+  }
+}
+
+axis(1,at=c(-2,1,2,3,4),labels=c(NA,0,0.3,0.7,NA))
+axis(2)
+abline(h=0,lty=2,lwd=1)
+text(x=3,y=3,labels="True Percentage Change",cex=0.8)
+legend("bottomleft",bty='n',legend=c("r=0.1","r=0.3","r=0.7"),col=c("darkblue","darkorange","darkgrey"),pch=20,title = "Sampling Fraction")
+
+
+# Add Figure with Skewed and Dispersed settlement pattern
+set.seed(122)
+nucleated=simdata$t1[sample(length(simdata$t1),size=20)]
+dispersed=simdata$t2[sample(length(simdata$t2),size=20)]
+par(mar=c(3,2,3,1))
+plot(0,0,type='n',xlab='',ylab='',xlim=c(-1,2),ylim=c(-0.1,1.1),axes=FALSE)
+
+points(runif(20)-0.8,runif(20),cex=nucleated/30,pch=21,col=rgb(0,0,0,0.8),bg=rgb(1,0.2,0,0.8))
+text(x=-0.30,y=-0.05,labels = "Nucleatation (1sr period)",cex=0.5)
+points(runif(20)+0.8,runif(20),cex=dispersed/30,pch=21,col=rgb(0,0,0,0.8),bg=rgb(1,0.2,0,0.8))
+text(x=1.30,y=-0.05,labels = "Dispersed Pattern (2nd period)",cex=0.5)
+box(col='lightgrey')
 dev.off()
+
+
+
