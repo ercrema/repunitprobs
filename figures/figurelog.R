@@ -7,50 +7,7 @@ library(ggpubr)
 
 
 ## Figure 1 ####
-
-## Figure 2 ####
-pdf(file = "./figure2.pdf",width = 7,height = 6)
-
-chiba=read.csv("../data/chibaJomon_fromCrema2013.csv")
-chiba = subset(chiba,!is.na(chiba$SimplifiedPhase))
-chiba$SimplifiedPhase=factor(chiba$SimplifiedPhase,levels=c("Otamadai-Katsuzaka","Kasori E (early)","Kasori E (late)","Shomyoji","Horinouchi","Kasori B","Soya","Angyo 1 & 2"))
-x = table(chiba$SiteID,chiba$SimplifiedPhase)
-
-par(mar=c(9,5,5,3))
-plot(0,0,xlab="",ylab="",xlim=c(0,9),axes=FALSE,type='n',ylim=c(0,max(apply(x,2,sum))+20))
-
-gg = numeric(length=8)
-
-for (i in 1:8)
-{
-  tmp=x[,i]
-  tmp=tmp[which(tmp>0)]
-  gg[i]=gini(tmp)
-  tmp=c(0,cumsum(tmp))
-  for (k in 1:c(length(tmp)-1))
-  {
-    col="lightgrey"
-    if (names(tmp[k+1])=='10529'){col='orange'} #Ariyoshi-Kita Site
-    if (names(tmp[k+1])=='9825'){col='royalblue'} #Miyauchiidosaku Site
-    rect(xleft=i-0.4,xright=i+0.4,ybottom=tmp[k],ytop=tmp[k+1],col=col)
-  }
-  text(x=i,y=tmp[k+1]+10,labels=paste0("n=",length(tmp)-1))
-}
-
-axis(2)
-axis(3,at=1:8,labels=round(gg,2))
-mtext(side=2,line=3,"Number of Pithouses",cex=1)
-mtext(side=3,line=3,"Gini Coefficient (settlement size)",cex=1)
-mtext(side=1,line=6.5,"Ceramic Phases",cex=1)
-axis(1,at=1:8,labels=levels(chiba$SimplifiedPhase),las=2)
-legend(6.5,220,legend=c("Ariyoshi-Kita","Aioi","Other Sites"),fill=c("orange","royalblue","grey"))
-dev.off()
-
-
-
-
-## Figure 3 ####
-pdf(file = "./figure3.pdf",width = 10,height = 3)
+pdf(file = "./figure1.pdf",width = 10,height = 3)
 
 par(mfrow=c(1,3))
 cx=1.2
@@ -117,9 +74,9 @@ dev.off()
 
 
 
-## Figure 4 ####
+## Figure 2 ####
 
-pdf(file = "./figure4.pdf",width = 5.5,height = 8)
+pdf(file = "./figure2.pdf",width = 5.5,height = 8)
 
 age = seq(300,800,1)
 asymptote = 0.9
@@ -152,25 +109,17 @@ par(mfrow=c(3,2),mar=c(5,5,1,1))
 for (i in 1:length(LL))
 {
   breaks=LL[[i]]
-  #tmp=mcsim(x=ss,nsim=1000,breaks=breaks,resolution=50)
-  tmp=mcsim(x=ss,nsim=1000,breaks=breaks,kde=TRUE,bw=20)
+  tmp=mcsim(x=ss,nsim=1000,breaks=breaks,resolution=50)
   avg = apply(tmp,1,mean,na.rm=TRUE)
- # plot(0,0,type='n',xlab='BC',ylab='Number of Events',xlim=c(800,300),ylim=c(0,250),axes=FALSE)
-  plot(0,0,type='n',xlab='BC',ylab='Number of Events',xlim=c(800,300),ylim=c(0,0.0045),axes=FALSE)
+  plot(0,0,type='n',xlab='BC',ylab='Number of Events',xlim=c(800,300),ylim=c(0,250),axes=FALSE)
   
   axis(1)
   axis(2)
-  #apply(tmp[,sample(1:1000,size=100)],2,lines,x=midPoints,col=rgb(0,0,0,0.05)) #
+  apply(tmp[,sample(1:1000,size=100)],2,lines,x=midPoints,col=rgb(0,0,0,0.05)) #
   
-  tseq=seq(max(breaks),min(breaks),by=-1)
-  tseq=tseq[-length(tseq)]
-  apply(tmp[,sample(1:1000,size=100)],2,lines,x=tseq,col=rgb(0,0,0,0.05)) #
+  lines(midPoints,avg,type='b',pch=20)
   
-  #lines(midPoints,avg,type='b',pch=20)
-  lines(tseq,avg,type='l',pch=20)
-  
- # lines(d$yr,(d$p/sum(d$p)*n*50),lwd=2,lty=2,col='darkred')
-  lines(d$yr,(d$p/sum(d$p)*1),lwd=2,lty=2,col='darkred')
+  lines(d$yr,(d$p/sum(d$p)*n*50),lwd=2,lty=2,col='darkred')
   
   legend("bottomright",legend=letters[i],bty='n',cex=2)
   
@@ -178,17 +127,18 @@ for (i in 1:length(LL))
   {
     col='lightgrey'
     if (as.logical(b%%2)){col='darkgrey'}
-   # rect(xleft=breaks[b],xright=breaks[b+1],ybottom=210,ytop=250,border=NA,col=col)
-  #  text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=230,labels=as.roman(b))
-    rect(xleft=breaks[b],xright=breaks[b+1],ybottom=0.004,ytop=0.0045,border=NA,col=col)
-    text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=0.0042,labels=as.roman(b))
+    rect(xleft=breaks[b],xright=breaks[b+1],ybottom=210,ytop=250,border=NA,col=col)
+    text(x=breaks[b+1]+(breaks[b]-breaks[b+1])/2,y=230,labels=as.roman(b))
   }
   
 }
 dev.off()
 
 
-## Figure 5 ####
+## Figure 3 ####
+
+
+## Figure 4 ####
 set.seed(133)
 simdata = sim.settlement(K1=1000,K2=1000)
 nsim = 100
@@ -203,10 +153,10 @@ for (i in 1:nrow(params))
 }
 
 
-pdf(file = "./figure5.pdf",width = 5,height = 4.5)
+pdf(file = "./figure4.pdf",width = 5,height = 4.5)
 par(mar=c(6,4,3.3,1),bg="white")
 layout(matrix(c(1,1,2,1),2,2),width=c(1,1),height=c(1,1))
-plot(0,0,type='n',xlab=c("b (Sampling Bias)"),ylab="Percentage Change",xlim=c(0.5,3.5),ylim=range(params$pr),axes=FALSE)
+plot(0,0,type='n',xlab=c("b (Sampling Bias)"),ylab="Observed Percentage Change",xlim=c(0.5,3.5),ylim=range(params$pr),axes=FALSE)
 
 colSeq=c("darkblue","darkorange","darkgrey")
 alpha=0.2
