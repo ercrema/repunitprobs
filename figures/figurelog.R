@@ -10,12 +10,32 @@ library(rcarbon) #requires rcarbon 1.3.2. To install: devtools::install_github('
 
 ## Figure 1 ####
 pdf(file = "./figure1.pdf",width = 12,height = 4)
-layout(matrix(c(1,2,3,4,5,5),nrow=2,ncol=3))
+layout(matrix(c(1,1,2,3,4,4),nrow=2,ncol=3))
 
 
 ### Panel a (Periodisation Example):
-plot(runif(1))
-plot(runif(1))
+## Load data
+southgreece <- read.csv("../data/Weibergetal2019_pelops.csv", header=TRUE, stringsAsFactors=FALSE, encoding="UTF-8",na.strings=c("NA",""),strip.white=TRUE)
+
+## Plot
+par(mar=c(4, 2.5, 0.5, 1)) #c(bottom, left, top, right)
+par(xaxs="i")
+par(yaxs="i")
+plotymax <- ymax <- max(southgreece$Sites)*1.1
+plot(southgreece$YearBCE, southgreece$Sites, type="l", col="white", cex.axis=0.8, xlim=c(-5500,-2200), ylim=c(0,plotymax), xlab="Years BCE")
+polygon(c(southgreece$YearBCE,rev(southgreece$YearBCE)),c(southgreece$Sites,rep(0,length(southgreece$Sites))), col="darkgreen", border=NA)
+scaled <- mean(southgreece$Sites) / mean(southgreece$SPD)
+polygon(c(southgreece$YearBCE,rev(southgreece$YearBCE)), c(southgreece$SPD*scaled,rep(0,length(southgreece$SPD))), col=rgb(191,191,191,125,maxColorValue=255), border=NA)
+box()
+lines(c(-5500,-5500),c(ymax*0.05,ymax*0.15), lwd=2)
+text(x=-5000, y=0.1*ymax, labels="Late\nNeolithic", font=4, cex=0.7)
+lines(c(-4500,-4500),c(ymax*0.05,ymax*0.15), lwd=2)
+text(x=-3850, y=0.1*ymax, labels="Final\nNeolithic", font=4, cex=0.7)
+lines(c(-3200,-3200),c(ymax*0.05,ymax*0.15), lwd=2)
+text(x=-2550, y=0.1*ymax, labels="Early\nBronze Age", font=4, cex=0.7)
+lines(c(-2000,-2000),c(ymax*0.05,ymax*0.15), lwd=2)
+mtext("A", side=1, font=2, cex=1.2, line=2.2, adj=-0.05)
+
 
 
 
@@ -60,14 +80,14 @@ text(0.35*(xoffset)+xmin,0.22*(yoffset)+ymin, ids[9], cex=0.5)
 text(0.35*(xoffset)+xmin,0.13*(yoffset)+ymin, ids[10], cex=0.5)
 text(0.35*(xoffset)+xmin,0.06*(yoffset)+ymin, ids[11], cex=0.5)
 polygon(c(-715,-715,-707,-707,-715), c(0,0.56*(yoffset)+ymin,0.56*(yoffset)+ymin,0,0), col=rgb(255,0,0,200,maxColorValue=255), border=NA)
-mtext("C", side=1, font=2, cex=1.2, line=2.2, adj=-0.05)
+mtext("B", side=1, font=2, cex=1.2, line=2.2, adj=-0.05)
 
 par(mar=c(4, 2, 0.2, 0.2)) #c(bottom, left, top, right)
 plot(spanE$duration,spanE$prob,type='l', col="white", xlim=c(0,750), xlab="Years")
 polygon(c(spanE$duration,rev(spanE$duration),spanE$duration[1]), c(spanE$prob,rep(0,length(spanE$prob)),spanE$prob[1]), col="grey75", border="grey75")
 lines(intervalE$duration,intervalE$prob, col="grey25", lty="dashed")
 legend("topright", legend=c("span","interval"), col=c("grey75","grey25"), lwd=c(3,1), lty=c("solid","dashed"), bty="n", cex=1)
-mtext("D", side=1, font=2, cex=1.2, line=2.2, adj=-0.05)
+mtext("C", side=1, font=2, cex=1.2, line=2.2, adj=-0.05)
 
 ### Panel c (Nucleation/Dispersion Example):
 #### Load data:
@@ -100,7 +120,7 @@ mtext(side=2,line=3,"Number of Pithouses",cex=1)
 mtext(side=1,line=6.5,"Ceramic Phases",cex=1)
 axis(1,at=1:8,labels=levels(chiba$SimplifiedPhase),las=2)
 legend(6,300,legend=c("Ariyoshi-Kita","Aioi","Other Sites"),fill=c("orange","royalblue","grey"),cex=1)
-mtext("E", side=1, font=2, cex=1.2, line=4.5, adj=-0.05)
+mtext("D", side=1, font=2, cex=1.2, line=4.5, adj=-0.05)
 
 
 dev.off()
