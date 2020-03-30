@@ -6,7 +6,7 @@ library(ggplot2)
 library(ggpubr)
 library(oxcAAR)
 library(reldist)
-library(rcarbon)
+library(rcarbon) #requires rcarbon 1.3.2. To install: devtools::install_github('ahb108/rcarbon@5bb28cf')
 
 ## Figure 1 ####
 pdf(file = "./figure1.pdf",width = 12,height = 4)
