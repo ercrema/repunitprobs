@@ -32,9 +32,9 @@ maukEcal <- calibrate(maukE$CRA, maukE$Error, verbose=FALSE, ids=ids)
 maukEpref <- c("VERA-4448","VERA-4447","VERA-4452","VERA-4453", "VERA-4450", "VERA-4900", "VERA-4449")
 maukEpref <- maukE[maukE$LabID %in% maukEpref,]
 quickSetupOxcal()
-fn1 <- "../oxcalscripts/maukE.oxcal"
-oxcalSpanIntScript(ids=maukEpref$LabID, ages=maukEpref$CRA, errors=maukEpref$Error, fn=fn1, span=TRUE, interval=TRUE)
-myoxcal1 <- readChar(fn1, file.info(fn1)$size)
+fn<-tempfile()
+oxcalSpanIntScript(ids=maukEpref$LabID, ages=maukEpref$CRA, errors=maukEpref$Error, fn=fn, span=TRUE, interval=TRUE)
+myoxcal1 <- readChar(fn, file.info(fn)$size)
 myoxcalresf <- executeOxcalScript(myoxcal1)
 myoxcalres <- parseFullOxcalOutput(readOxcalOutput(myoxcalresf))
 spanE <- extractSpan(myoxcalres)
@@ -182,6 +182,15 @@ dev.off()
 
 ## Figure 3 ####
 load("../R_Images/simRes1.RData")
+#Loaded Objects:
+# simRes1 ... List of Matrices containing Monte-Carlo simulation outputs
+# breaks ... Break points of time blocks
+# midPoints ... Mid points of time blocks
+# d ... population curve
+# n ... number of samples
+# LL ... list of periodisation breaks points
+
+
 pdf(file = "./figure3.pdf",width = 5.5,height = 8)
 par(mfrow=c(3,2),mar=c(5,5,1,1))
 for (i in 1:length(LL))
@@ -214,6 +223,17 @@ dev.off()
 
 ## Figure 4 ####
 load("../R_Images/simRes2.RData")
+#Loaded Items:
+# mediankd ... median simulation value
+# pooled ... Pooled posterior of date Span
+# pooledEarly ... Pooled posterior of date Span (Early Mines)
+# pooledMiddle ... Pooled posterior of date Span (Middle Mines)
+# pooledLate ... Pooled posterior of date Span (Late Mines)
+# simmat ... matrix with simulation output
+# simyears ... simulation years
+
+
+
 pdf(file = "./figure4.pdf",width = 9,height = 6)
 layout(matrix(c(1,2,1,3,1,4),nrow=2,ncol=3))
 par(mar=c(4, 4, 1, 1)) #c(bottom, left, top, right)
@@ -250,6 +270,12 @@ dev.off()
 
 ## Figure 5 ####
 load("../R_Images/simRes3.RData")
+#Loaded Items:
+# b ... vector of sampling bias
+# r ... vector of sampling fractions
+# simdata3 ... settlement simulation output
+# simRes3 ... sampling simulation output
+
 pdf(file = "./figure5.pdf",width = 5,height = 4.5)
 par(mar=c(6,4,3.3,1),bg="white")
 layout(matrix(c(1,1,2,1),2,2),width=c(1,1),height=c(1,1))
