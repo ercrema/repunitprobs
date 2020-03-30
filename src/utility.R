@@ -81,5 +81,89 @@ mcsim <- function(x,nsim,breaks,resolution)
 
 
 
+extractStart <- function(x){
+  require(rcarbon)
+  tmp=x[[findType(x,op="Start")]]$posterior
+  start=tmp$start
+  norm=tmp$probNorm
+  res=tmp$resolution
+  prob=tmp$prob*norm
+  duration=(seq(from=start,by=res,length.out=length(prob)))
+  return(data.frame(duration,prob))
+}
+
+extractEnd <- function(x){
+  require(rcarbon)
+  tmp=x[[findType(x,op="End")]]$posterior
+  start=tmp$start
+  norm=tmp$probNorm
+  res=tmp$resolution
+  prob=tmp$prob*norm
+  duration=(seq(from=start,by=res,length.out=length(prob)))
+  return(data.frame(duration,prob))
+}
+
+extractSpan <- function(x){
+  require(rcarbon)
+  tmp=x[[findType(x,op="Span")]]$posterior
+  start=tmp$start
+  norm=tmp$probNorm
+  res=tmp$resolution
+  prob=tmp$prob*norm
+  duration=(seq(from=start,by=res,length.out=length(prob)))
+  return(data.frame(duration,prob))
+}
+
+extractInterval <- function(x){
+  require(rcarbon)
+  tmp=x[[findType(x,op="Interval")]]$posterior
+  start=tmp$start
+  norm=tmp$probNorm
+  res=tmp$resolution
+  prob=tmp$prob*norm
+  duration=(seq(from=start,by=res,length.out=length(prob)))
+  return(data.frame(duration,prob))
+}
+
+findType <- function(x,op="Span"){
+  index = numeric()
+  for (i in 1:length(x))
+  {
+    if ("type"%in%names(x[[i]]))
+    {
+      tmp=x[[i]][which(names(x[[i]])=='op')]
+      if (tmp==op){return(i)}
+    } 
+  }
+  print("Term not found")
+}
+
+
+oxcalSpanIntScript <- function(ids, ages, errors, fn, span=TRUE, interval=FALSE){
+  ## Generate an OxCal script to run Span and Interval requests for simpl singl phase date sets. 
+  export <- file(fn)
+  cat(" Plot()\n {\n ",file=fn,append=FALSE)
+  ## Preamble
+  cat("Sequence()\n {\n ", file=fn, append=TRUE)
+  cat(paste0('Boundary("Start 1");\n '), file=fn, append=TRUE)
+  ## Actual Dates
+  cat(paste0('Phase("1")\n '), file=fn, append=TRUE)
+  cat('{\n', file=fn, append=TRUE)
+  for (b in 1:length(ages)){
+    cat(paste('R_Date(','\"',ids[b],'\",',ages[b],',',errors[b],');\n', sep = ""), file=fn, append=TRUE)
+  }
+  if (span){
+    cat(paste0('Span("Span of dates");\n'), file=fn, append=TRUE)
+  }
+  if (interval){
+    cat(paste0('Interval("Interval of dates");\n'), file=fn, append=TRUE)
+  }
+  cat('};\n',file=fn,append=TRUE)
+  cat(paste0('Boundary("End 1");\n'), file=fn, append=TRUE)
+  cat('};\n',file=fn,append=TRUE)
+  cat('};',file=fn,append=TRUE)
+  close(export)
+}
+
 
 
