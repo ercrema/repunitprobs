@@ -40,7 +40,7 @@ for (i in 1:length(simRes1))
   simRes1[[i]]=mcsim(x=ss,nsim=1000,breaks=breaks,resolution=50)
 }
 
-save(simRes1,breaks,midPoints,d,file="../R_Images/simRes1.RData")
+save(simRes1,breaks,midPoints,d,n,LL,file="../R_Images/simRes1.RData")
 
 
 
@@ -134,9 +134,9 @@ for (a in 1:nrow(examplemines)){
   datedyears <- round(runif(n=ndates,  min=BCADtoBP(examplemines[a,"EndBCE"]), max=BCADtoBP(examplemines[a,"StartBCE"])),0)
   errors <- rep(exampleerror,length(datedyears))
   Samples14C <- uncalibrate(datedyears, CRAerrors=30)[,c("rCRA","rError")]
-  fn2 <- "simmines.txt"
-  oxcalSpanIntScript(ids=as.character(1:ndates), ages=Samples14C$rCRA, errors=Samples14C$rError, fn=fn2, span=TRUE)
-  myoxcal2 <- readChar(fn2, file.info(fn2)$size)
+  fn <- tempfile()
+  oxcalSpanIntScript(ids=as.character(1:ndates), ages=Samples14C$rCRA, errors=Samples14C$rError, fn=fn, span=TRUE)
+  myoxcal2 <- readChar(fn, file.info(fn)$size)
   myoxcalresf2 <- executeOxcalScript(myoxcal2)
   myoxcalres2 <- parseFullOxcalOutput(readOxcalOutput(myoxcalresf2))
   span2 <- extractSpan(myoxcalres2)
