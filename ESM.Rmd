@@ -1,7 +1,7 @@
 ---
 title: "Electronic Supplementary Material for:"
-subtitle: "Comparing time series of long-term human activity: three key challenges"
-author: "Enrico Crema & Andrew Bevan"
+subtitle: "Modifiable reporting unit problems and time series of long-term human activity"
+author: "Andrew Bevan & Enrico Crema"
 date:  "`r format(Sys.time(), '%d %B, %Y')`" 
 output: pdf_document
 ---
@@ -16,7 +16,7 @@ source("./src/utility.R")
 
 Consider the following logistic population dynamic, where a major population increase occurs between 600 and 500 BC.
 
-```{r,fig.width=5,fig.height=5}
+```{r,fig.width=4,fig.height=4}
 age = seq(300,800,1)
 asymptote = 0.9
 sl = 0.04
@@ -31,11 +31,12 @@ box()
 
 We first simulate 1,000 arhcaeological events that occured with frequencies directly proportional to such population dynamic. For example:
 
-```{r}
+```{r,fig.width=4,fig.height=4}
 n=1000
 set.seed(123)
 ss = round(sample(d$yr,size=1000,prob=d$p/sum(d$p),replace=TRUE))
-hist(ss,xlim=c(800,300),breaks=seq(300,800,50),col='darkorange',border='lightgrey',freq=T,main='')
+hist(ss,xlim=c(800,300),breaks=seq(300,800,50),xlab="BC",
+     col='darkorange',border='lightgrey',freq=T,main='')
 lines(d$yr,(d$p/(sum(d$p))*n*50),lwd=2,lty=2) #True Population Curve
 ```
 
@@ -57,7 +58,7 @@ Thus in this case there are `r as.numeric(table(phases)['A'])` events assigned t
 
 There is a number of closely related developed in the last decade designed to analyse frequency data based on archaeological periodisation. One such approach consists of assigning probabilistic weights to individual events for a given temporal interval. This approach is at the basis of aoristic analysis, where time is divided into equally sized blocks, and weights are computed under the assumption of a uniform probability distribution within assigned phase(s). Thus if we use blocks of 50 years, we would obtain the following:
 
-```{r,fig.height=5,fig.width=5}
+```{r,fig.height=54,fig.width=4}
 # Extract number of cases
 An =table(phases)['A']
 Bn =table(phases)['B']
@@ -82,7 +83,7 @@ lines(d$yr,(d$p/sum(d$p)*n*50),lwd=2,lty=2,col='darkblue')
 
 Aoristic sums do not provide, however, any measure of chronological uncertainty making hard to discern, for example, whether flat portions of the curve are the result of genuine stability in the frequency of events or the result of higher levels of uncertainty. To overcome this issue, and alternative approach consist of employing Monte-Carlo simulation:
 
-```{r,fig.width=5,fig.height=5}
+```{r,fig.width=4,fig.height=4}
 nsim =1000 #number of simulations
 mat=matrix(NA,nrow=10,ncol=nsim)
 
@@ -128,7 +129,8 @@ for (i in 1:length(LL))
   breaks=LL[[i]]
   tmp=mcsim(x=ss,nsim=1000,breaks=breaks,resolution=50)
   avg = apply(tmp,1,mean)
-  plot(0,0,type='n',xlab='BC',ylab='Number of Events',xlim=c(800,300),ylim=c(0,250),axes=FALSE)
+  plot(0,0,type='n',xlab='BC',ylab='Number of Events',
+       xlim=c(800,300),ylim=c(0,250),axes=FALSE)
   axis(1)
   axis(2)
   apply(tmp[,sample(1:1000,size=100)],2,lines,x=midPoints,col=rgb(0,0,0,0.05)) #
@@ -149,7 +151,144 @@ for (i in 1:length(LL))
 
 
 
-# Simulation 2: Nucleation/Dispersal Bias
+# Simulation 2: Duration
+
+Consider a time-series recording the number of simultaneously occupied mines over a 1,000 years interval (1750-750 BC). Suppose this number to be constant ($n=100$) but with the duration of occupation of the mines to be a linear function of time. More formally we model the duration of each mine as a random draw from a negative binomial distribution with the dispersion parameter $\alpha$ equal to 1 and mean $\mu$ equal to 
+
+$$\mu(t) = -132.50 +  -0.19t  $$
+with $t$ between -1750 and -750. Here we limit $\mu$ to bet between 10 and 200 (i.e. if the result of the equation is below 10, $\mu$ is set to 10, if above 200, $\mu$ is set to 200). The R script below generates a 100 simulated dataset under these conditions:
+```{r}
+## Parameters Setup 
+edgec <- 500 # Add +/-500 years to avoid edge effects
+years <- c(-1750:-750) #Simulation Interval
+simyears <- c((years[1]-edgec) : (years[length(years)]+edgec))
+nmines <- 100 #Number of mines in a given yers
+minepreallocation <- 10000
+
+mDurationMax <- 200 #Maximum Duration of Sites
+mDurationMin <- 10 #Minimum Duration of Sites
+df <- data.frame(x=c(years[1],years[length(years)]),
+                 y=c(mDurationMax,mDurationMin))
+mod <- lm(y~x, data=df) #
+
+## Simulate
+usemodel <- TRUE
+nsim <- 100
+simmat <- matrix(nrow=length(simyears), ncol=nsim)
+set.seed(100)
+
+
+for (b in 1:nsim){
+  minedf <- data.frame(StartBCE=c(rep(simyears[1],nmines),
+                                  rep(NA,(minepreallocation-nmines))),
+                       EndBCE=NA, Duration=NA, Mu=NA, Active=FALSE)
+  minedf$Duration[!is.na(minedf$StartBCE)] <- rnbinom(nmines, mu=200, size=1)
+  minedf$EndBCE <- minedf$StartBCE + minedf$Duration
+  for (a in simyears){
+    check1 <- minedf$StartBCE <= a & !is.na(minedf$StartBCE)
+    check2 <- minedf$EndBCE >= a & !is.na(minedf$EndBCE)
+    minedf[,"Active"] <- FALSE
+    minedf[check1 & check2,"Active"] <- TRUE
+    checksum1 <- 100-sum(minedf$Active)
+    if (checksum1 > 0){
+      myrows <- which(is.na(minedf$StartBCE))[1:checksum1]
+      minedf$StartBCE[myrows] <- a
+      if (usemodel){
+        mu <- as.numeric(coefficients(mod)[1]) +
+          (as.numeric(coefficients(mod)[2]) * a)
+        if (mu > mDurationMax){
+          mu <- mDurationMax
+        } else if (mu < mDurationMin){
+          mu <- mDurationMin
+        }
+      } else {
+        mu <- 200
+      }
+      mu <- round(mu,0)
+      minedf$Mu[myrows] <- mu
+      minedf$Duration[myrows] <- rnbinom(checksum1, mu=mu, size=1)
+      minedf$EndBCE[myrows] <- minedf$StartBCE[myrows] + 
+        minedf$Duration[myrows]
+    }
+  }
+  minedf <- minedf[!is.na(minedf$StartBCE),]
+  nrow(minedf)
+  minedf$MidYear <- minedf$StartBCE+round(minedf$Duration/2,0)
+  tmp <- density(minedf$MidYear, n=length(simyears), 
+                 from=simyears[1],to=simyears[length(simyears)])$y
+  simmat[,b] <- tmp
+}
+mediankd <- apply(simmat,1,median)
+```
+
+The figure below compares the life-span of a sample of 1000 sites from one simulation (top panel) along with $\mu(t)$ (dashed orange line), against the number of those occupied at a given moment in time (middle panel) and the frequency of mid points (lower panel).  
+
+```{r,fig.width=6,fig.height=8}
+set.seed(121)
+par(mfrow=c(3,1),mar=c(0,4,3,4))
+plotSUB=minedf[sample(1:nrow(minedf),size=1000),]
+plot(0,0,type='n',xlim=c(-1800,-700),ylim=c(0,nrow(plotSUB)+1),
+     axes=FALSE,ylab='',xlab='Year BC')
+for (i in 1:nrow(plotSUB))
+{
+  lines(x=c(plotSUB$StartBCE[i],plotSUB$EndBCE[i]),y=c(i,i),lwd=0.5)
+  points(x=c(plotSUB$StartBCE[i],plotSUB$EndBCE[i]),y=c(i,i),pch=20,cex=0.4)
+  points(x=plotSUB$MidYear[i],y=i,pch=20,col='red',cex=0.6)
+}
+par(new=TRUE)
+plot(0,0,type='n',xlim=c(-1800,-700),ylim=c(10,200),
+     axes=FALSE,ylab='',xlab='')
+abline(mod,lty=2,col='darkorange',lwd=1.5)
+axis(4,at=c(10,100,150,200))
+mtext(4,line=2.5,text = expression(mu),las=2)
+
+
+tseq=seq(-1800,-700,1)
+contemp=numeric(length=length(tseq))
+for (t in 1:length(tseq))
+{
+  contemp[t] = sum(plotSUB$StartBCE < tseq[t]& plotSUB$EndBCE > tseq[t])
+}
+
+plot(tseq,contemp,type='l',axes=FALSE,ylim=c(0,40),xlim=c(-1800,-700),
+     ylab='N Occupied sites')
+axis(side=2)
+
+par(mar=c(4,4,3,4))
+bseq=seq(-1800,-600,100)
+freq=table(cut(plotSUB$MidYear,breaks = bseq))
+plot(0,0,type='n',axes=FALSE,ylim=c(0,max(freq)),xlim=c(-1800,-700),
+     ylab='Frequency of MidPoints')
+for (i in 2:(length(bseq)-1))
+{
+  rect(xleft=bseq[i-1],xright=bseq[i],ybottom=0,
+       ytop=freq[i],border=NA,col='lightblue')
+}
+axis(2)
+axis(1,at=seq(-1800,-600,200),labels=seq(1800,600,-200))
+```
+
+Ignoring duration and treating each site occupation as a point (rather than a line) in time creates a false impression of a increase in the number of sites. The figure below further demonstrates this point by comparing the true density of site frequency (dashed red line) against an envelope of density lines of midpoint frequency across the full 100 simulations. 
+
+```{r,fig.width=7,fig.height=4}
+plot(simyears, mediankd, type="l",  xlim=c(-1750,-751), 
+     xlab="Years BC", ylab="",axes=FALSE)
+axis(1,at=seq(-1600,-800,+200),labels=seq(1600,800,-200))
+axis(2)
+box()
+
+for (d in 1:ncol(simmat)){
+  lines(simyears,simmat[,d], col=rgb(191,191,191,alpha=75,max=255))
+}
+abline(h=1/length(simyears), col="red", lty="dashed")
+lines(simyears,mediankd, col="black")
+legend("topleft", 
+       legend=c("actual mine density", "simulated densities","median simulated"), 
+       col=c("red", "grey75","black"), lwd=c(1,1,1), 
+       lty=c("dashed","solid","solid"), bty="n", cex=1)
+```
+
+# Simulation 3: Nucleation/Dispersal Bias
 
 ## Setup
 Consider two hypothethical archaeological periods, $\alpha$ and $\beta$, with equal durations in time. Our objective is to investigate the percentage change in the number of residential units across the two periods. More formally we are intested in estimating $100 \times (N_\beta - N_\alpha)/N_\beta$ where $N_\alpha$ and $N_\beta$ are the total number of residential units for each period. Our residential units are however spatially orgaised into sites (i.e. settlements) with different sizes, and that our sampling is conditioned by such structure. More specifically, we assume that sampling occurs at the level of site and not each individual residential unit, and that we are able to recover only a fraction $r$ of sites, where $r=k/K$, where $k$ is observed number of sites across the two periods in our sample and $K$ is the number of sites across the two periods in the population. Finally, we assume that the probability of each site being sampled is defined by the following equation:
@@ -202,8 +341,6 @@ sum(result$t2)
 To consider different scenarios we consider sampling fractions $r=\{0.1,0.3,0.7\}$ and sampling biases $b=\{0,0.3,0.7\}$. In all case we consider $K1=K2=1000$ and run 1,000 repetitions for each of the nine parameter combinations. 
 
 ```{r,fig.height=5,fig.width=5}
-library(ggplot2)
-library(ggpubr)
 set.seed(123)
 simdata = sim.settlement(K1=1000,K2=1000)
 nsim = 100
@@ -218,14 +355,36 @@ for (i in 1:nrow(params))
 }
 
 # Plot results
-params$r=as.factor(params$r)
-p <- ggboxplot(params, x = "b", y = "pr",
-           color = "r", palette = "jco",
-           add = "jitter",ggtheme=theme_grey(),alpha=0.9) + 
-  ylab("Percentage Change") + 
-  geom_hline(yintercept = 0, linetype="dashed") + 
-  theme(legend.position = 'top')
-p
+plot(0,0,type='n',xlab=c("b (Sampling Bias)"),
+     ylab="Observed Percentage Change",xlim=c(0.5,3.5),
+     ylim=range(params$pr),axes=FALSE)
+
+colSeq=c("darkblue","darkorange","darkgrey")
+alpha=0.2
+colSeq2=c(rgb(0,0,0.54,alpha),rgb(1,0.55,0,alpha),rgb(0.66,0.66,0.66,alpha))
+mids=c(0.75,1,1.25)
+for (i in 1:length(b))
+{
+  for (j in 1:length(r))
+  {
+    bb=b[i]
+    rr=r[j]
+    y = subset(params,b==bb&r==rr)$pr
+    points(x=i-1+runif(100,mids[j]-0.05,mids[j]+0.05),y=y,pch=20,col=colSeq2[j])
+    rect(ybottom=quantile(y,0.25),ytop=quantile(y,0.75),
+         xleft=i-1+mids[j]-0.07,xright=i-1+mids[j]+0.07,border=colSeq[j])
+    lines(x=c(i-1+mids[j]-0.07,i-1+mids[j]+0.07),
+          y=c(median(y),median(y)),lwd=2,col=colSeq[j])
+  }
+}
+
+axis(1,at=c(-2,1,2,3,4),labels=c(NA,0,0.3,0.7,NA))
+axis(2)
+abline(h=0,lty=2,lwd=1)
+text(x=3,y=3,labels="True Percentage Change",cex=0.8)
+legend("topright",bty='n',legend=c("r=0.1","r=0.3","r=0.7"),
+       col=c("darkblue","darkorange","darkgrey"),
+       pch=20,title = "Sampling Fraction")
 ```
 
 
