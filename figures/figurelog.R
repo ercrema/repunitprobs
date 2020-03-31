@@ -1,11 +1,7 @@
 #Figure Log Files
 source("../src/utility.R")
 library(trapezoid)
-library(reldist)
-library(ggplot2)
-library(ggpubr)
 library(oxcAAR)
-library(reldist)
 library(rcarbon) #requires rcarbon 1.3.2. To install: devtools::install_github('ahb108/rcarbon@5bb28cf')
 
 ## Figure 1 ####
