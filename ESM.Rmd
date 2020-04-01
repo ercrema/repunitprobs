@@ -8,8 +8,14 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-source("./src/utility.R")
+source("./src/utility.R") 
 ```
+
+### NOTE
+
+This ESM was rendered using custom R functions available on this GitHub repository:
+
+[\underline{https://github.com/ercrema/repunitprobs}](https://github.com/ercrema/repunitprobs)
 
 
 # Simulation 1: Modifiable Temporal Unit Problem
@@ -58,7 +64,7 @@ Thus in this case there are `r as.numeric(table(phases)['A'])` events assigned t
 
 There is a number of closely related developed in the last decade designed to analyse frequency data based on archaeological periodisation. One such approach consists of assigning probabilistic weights to individual events for a given temporal interval. This approach is at the basis of aoristic analysis, where time is divided into equally sized blocks, and weights are computed under the assumption of a uniform probability distribution within assigned phase(s). Thus if we use blocks of 50 years, we would obtain the following:
 
-```{r,fig.height=54,fig.width=4}
+```{r,fig.height=5,fig.width=4}
 # Extract number of cases
 An =table(phases)['A']
 Bn =table(phases)['B']
