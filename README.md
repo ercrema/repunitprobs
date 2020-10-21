@@ -1,6 +1,8 @@
 # Modifiable reporting unit problems and time series of long-term human activity: source code, data, and scripts
 
-This repository contains all data and scripts required to fully reproduce figures and simulations in the manuscript "Modifiable reporting unit problems and time series of long-term human activity" authored by Bevan, A. and Crema, E.R.
+This repository contains all data and scripts required to fully reproduce figures and simulations for the following article:
+
+Bevan,A., Crema, E.R. (2020), Modifiable reporting unit problems and time series of long-term human activity, _Philosophical Transactions of the Royal Society B_, DOI: 10.1098/rstb.2019.0726
 
 ## Simulation Scripts
 R scripts for running the simulations are stored in the file [simulation_log.R](https://github.com/ercrema/repunitprobs/blob/master/simulation_log.R). This requires some additional functions stored in [/src/utility.R](https://github.com/ercrema/repunitprobs/blob/master/src/utility.R). Simulation outputs required for the figures are stored as R image files in the folder [R_Images](https://github.com/ercrema/repunitprobs/tree/master/R_Images).
