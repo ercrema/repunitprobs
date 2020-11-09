@@ -11,7 +11,7 @@ R scripts for running the simulations are stored in the file [simulation_log.R](
 R scripts for generating the figures in the manuscript are contained in the file [figures/figurelog.R](https://github.com/ercrema/repunitprobs/blob/master/figures/figurelog.R). Raw data required for figure 1 are stored in the folder [data](https://github.com/ercrema/repunitprobs/tree/master/data). 
 
 ## ESM
-The electronic supplementary material ([ESM.pdf](https://github.com/ercrema/repunitprobs/blob/master/ESM.pfg)) contains additional details about the three simulations. This is just a rendered version of the Rmardkdown file [ESM.Rmd](https://github.com/ercrema/repunitprobs/blob/master/ESM.Rmd).
+The electronic supplementary material ([ESM.pdf](https://github.com/ercrema/repunitprobs/blob/master/ESM.pdf)) contains additional details about the three simulations. This is just a rendered version of the Rmardkdown file [ESM.Rmd](https://github.com/ercrema/repunitprobs/blob/master/ESM.Rmd).
 
 ## Required R Packages & Software
 
